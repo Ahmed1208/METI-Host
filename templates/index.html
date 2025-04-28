@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tier1 App</title>
+    <script>
+        window.onload = function() {
+            const hasName = "{{ name|default('') }}";
+            if (!hasName) {
+                let username = prompt("Please enter your name:");
+                if (username) {
+                    document.getElementById("username").value = username;
+                } else {
+                    alert("Name is required.");
+                }
+            }
+        };
+    </script>
+</head>
+<body>
+    <h2>private room:</h2>
+    <h1>https://b59njlj0-5000.uks1.devtunnels.ms</h1>
+
+    <form method="post">
+        {% if not name %}
+            <input type="hidden" id="username" name="username" required>
+        {% else %}
+            <p>Welcome, {{ name }}!</p>
+        {% endif %}
+
+        <textarea name="user_input" rows="5" cols="40" required></textarea><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <h3>All Previous Messages:</h3>
+    <textarea rows="10" cols="60" readonly>{{ all_messages }}</textarea>
+</body>
+</html>
