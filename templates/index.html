@@ -3,8 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <title>Tier1 App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .container {
+            display: flex;  /* Flexbox container */
+            justify-content: space-between;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 900px;
+        }
+
+        .left-section, .right-section {
+            width: 48%; /* Adjusting each section to take up half */
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            text-align: center;
+            color: #0077cc;
+        }
+
+        h3 {
+            margin-top: 20px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+        }
+
+        input[type="submit"] {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #005fa3;
+        }
+
+        .messages {
+            width: 100%;
+            height: 400px; /* Increase height for better view */
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 15px;  /* Increase the font size of the text */
+        }
+
+        .anon-label {
+            color: blue;
+            font-weight: bold;
+        }
+    </style>
+
     <script>
-        window.onload = function() {
+        window.onload = function () {
             const hasName = "{{ name|default('') }}";
             if (!hasName) {
                 let username = prompt("Please enter your name:");
@@ -15,24 +92,37 @@
                 }
             }
         };
+
+        function escapeNewlines() {
+            const textarea = document.getElementById("user_input");
+            textarea.value = textarea.value.replace(/\r?\n/g, "\\n");
+        }
     </script>
 </head>
 <body>
-    <h2>private room:</h2>
-    <h1>https://b59njlj0-5000.uks1.devtunnels.ms</h1>
+    <div class="container">
+        <!-- Left section for input form -->
+        <div class="left-section">
+            <h2>meticafe منتدى</h2>
+            <h3>What is on your mind ?!</h3>
 
-    <form method="post">
-        {% if not name %}
-            <input type="hidden" id="username" name="username" required>
-        {% else %}
-            <p>Welcome, {{ name }}!</p>
-        {% endif %}
+            <form method="post" onsubmit="escapeNewlines()">
+                {% if not name %}
+                    <input type="hidden" id="username" name="username" required>
+                {% endif %}
 
-        <textarea name="user_input" rows="5" cols="40" required></textarea><br><br>
-        <input type="submit" value="Submit">
-    </form>
+                <textarea id="user_input" name="user_input" rows="5" required></textarea><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
 
-    <h3>All Previous Messages:</h3>
-    <textarea rows="10" cols="60" readonly>{{ all_messages }}</textarea>
+        <!-- Right section for displaying previous messages -->
+        <div class="right-section">
+            <h3>All Previous Messages:</h3>
+            <div class="messages">
+                {{ all_messages|safe }}
+            </div>
+        </div>
+    </div>
 </body>
 </html>

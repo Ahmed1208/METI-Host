@@ -65,17 +65,26 @@ def home():
     try:
         with open("user_inputs.txt", "r", encoding="utf-8") as f:
             for line in f:
-                parts = line.strip().split('\t')
+                parts = line.rstrip('\n').split('\t', 4)
                 if len(parts) == 5:
                     _, _, _, _, message = parts
-                    messages.append(f"Anonymous: {message}")
-        # Reverse so latest is on top
+                    # Replace literal \n with actual newline + indent
+                    indent = "\n" + " " * 11
+                    unescaped_msg = message.replace("\\n", indent)
+
+                    # Ignore if message is only newlines or whitespace
+                    if unescaped_msg.strip():
+                        formatted_msg = (
+                            "<div style='white-space: pre-wrap;'>"
+                            "<span style='color:blue;'>Anonymous:</span> "
+                            f"{unescaped_msg}</div>"
+                        )
+                        messages.append(formatted_msg)
         messages.reverse()
     except FileNotFoundError:
         messages = []
 
-    return render_template("index.html", result=result, name=name, all_messages="\n".join(messages))
-
+    return render_template("index.html", result=result, name=name, all_messages="<br>".join(messages))
 
 
 if __name__ == "__main__":
