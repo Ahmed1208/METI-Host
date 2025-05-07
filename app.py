@@ -59,7 +59,12 @@ def home():
         with open("user_inputs.txt", "a", encoding="utf-8") as f:
             f.write(f"{timestamp}\t{name}\t{ip}\t{user_agent}\t{user_input}\n")
 
-        result = tier1(user_input)
+        session["last_result"] = tier1(user_input)
+
+        return redirect(request.path)
+
+    # Retrieve result after redirect
+    result = session.pop("last_result", "")
 
     messages = []
     try:
@@ -72,9 +77,11 @@ def home():
                     unescaped_msg = message.replace("\\n", indent)
                     if unescaped_msg.strip():
                         delete_button = ""
-                        if request.path == "/amin-delete":
+                        if show_delete_form:
                             delete_button = (
-                                f"<form method='post' action='/delete_message' style='display:inline;'>"
+                                f"<form method='post' action='/delete_message' "
+                                f"onsubmit='return confirm(\"Are you sure you want to delete this message?\");' "
+                                f"style='display:inline;'>"
                                 f"<input type='hidden' name='message_text' value='{message}'>"
                                 f"<button type='submit' style='margin-left:10px; color:red;'>🗑️</button>"
                                 f"</form>"
