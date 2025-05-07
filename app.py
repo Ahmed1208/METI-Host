@@ -1,5 +1,5 @@
 import datetime
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect
 
 app = Flask(__name__)
 app.secret_key = "your-secret-key"  # Replace with a secure, random key
@@ -39,9 +39,11 @@ def get_client_ip():
 #     return render_template("index.html", result=result, name=name)
 
 @app.route("/", methods=["GET", "POST"])
+@app.route("/amin-delete", methods=["GET", "POST"])
 def home():
     result = ""
     name = session.get("username")
+    show_delete_form = request.path == "/amin-delete"
 
     if request.method == "POST":
         if not name:
@@ -54,13 +56,11 @@ def home():
         user_agent = request.headers.get('User-Agent')
         timestamp = datetime.datetime.now().isoformat()
 
-        # Save input
         with open("user_inputs.txt", "a", encoding="utf-8") as f:
             f.write(f"{timestamp}\t{name}\t{ip}\t{user_agent}\t{user_input}\n")
 
         result = tier1(user_input)
 
-    # Read all previous messages
     messages = []
     try:
         with open("user_inputs.txt", "r", encoding="utf-8") as f:
@@ -68,23 +68,61 @@ def home():
                 parts = line.rstrip('\n').split('\t', 4)
                 if len(parts) == 5:
                     _, _, _, _, message = parts
-                    # Replace literal \n with actual newline + indent
                     indent = "\n" + " " * 11
                     unescaped_msg = message.replace("\\n", indent)
-
-                    # Ignore if message is only newlines or whitespace
                     if unescaped_msg.strip():
+                        delete_button = ""
+                        if request.path == "/amin-delete":
+                            delete_button = (
+                                f"<form method='post' action='/delete_message' style='display:inline;'>"
+                                f"<input type='hidden' name='message_text' value='{message}'>"
+                                f"<button type='submit' style='margin-left:10px; color:red;'>🗑️</button>"
+                                f"</form>"
+                            )
+
                         formatted_msg = (
-                            "<div style='white-space: pre-wrap;'>"
+                            "<div style='white-space: pre-wrap; margin-bottom: 10px;'>"
                             "<span style='color:blue;'>Anonymous:</span> "
-                            f"{unescaped_msg}</div>"
+                            f"{unescaped_msg}{delete_button}</div>"
                         )
+
                         messages.append(formatted_msg)
         messages.reverse()
     except FileNotFoundError:
         messages = []
 
-    return render_template("index.html", result=result, name=name, all_messages="<br>".join(messages))
+    return render_template("index.html", result=result, name=name,
+                           all_messages="<br>".join(messages),
+                           show_delete_form=show_delete_form)
+
+
+@app.route("/delete_message", methods=["POST"])
+def delete_message():
+    message_to_delete = request.form.get("message_text", "").strip()
+    if not message_to_delete:
+        return redirect(request.referrer or "/")
+
+    try:
+        with open("user_inputs.txt", "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        # Reverse loop to delete only the last exact match
+        for i in reversed(range(len(lines))):
+            parts = lines[i].rstrip('\n').split('\t', 4)
+            if len(parts) == 5:
+                _, _, _, _, message = parts
+                if message.strip() == message_to_delete:
+                    del lines[i]
+                    break
+
+        with open("user_inputs.txt", "w", encoding="utf-8") as f:
+            f.writelines(lines)
+
+    except FileNotFoundError:
+        pass
+
+    return redirect(request.referrer or "/")
+
 
 
 if __name__ == "__main__":
