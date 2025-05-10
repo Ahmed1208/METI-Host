@@ -109,11 +109,10 @@
                 if (data !== lastMessages) {
                     document.querySelector(".messages").innerHTML = data;
 
-                    // Play sound only if it's not the initial load
                     if (lastMessages !== "") {
                         const sound = document.getElementById("newMessageSound");
                         sound.play().catch(e => {
-                            console.warn("Sound play failed (maybe due to autoplay restrictions):", e);
+                            console.warn("Sound play failed:", e);
                         });
                     }
 
@@ -125,7 +124,7 @@
     setInterval(fetchMessages, 5000);
 
     window.onload = function () {
-        fetchMessages();  // Initial load
+        fetchMessages();
         const hasName = "{{ name|default('') }}";
         if (!hasName) {
             let username = prompt("Please enter your name:");
@@ -135,6 +134,17 @@
                 alert("Name is required.");
             }
         }
+
+        // 👇 Add this block to submit form on Enter (except Shift+Enter)
+        const textarea = document.getElementById("user_input");
+        const form = textarea.closest("form");
+
+        textarea.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();  // submits the form
+            }
+        });
     };
 </script>
 
