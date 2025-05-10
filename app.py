@@ -1,5 +1,6 @@
 import datetime
 from flask import Flask, render_template, request, session, redirect
+import yaml
 
 app = Flask(__name__)
 app.secret_key = "your-secret-key"  # Replace with a secure, random key
@@ -12,6 +13,15 @@ def get_client_ip():
     if request.headers.getlist("X-Forwarded-For"):
         return request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
     return request.remote_addr
+
+def get_version():
+    try:
+        with open("config.yaml", "r") as f:
+            config = yaml.safe_load(f)
+            return config.get("version", "0.0.0")
+    except FileNotFoundError:
+        return "0.0.0"  # Return a default version if the file doesn't exist
+
 
 # @app.route("/", methods=["GET", "POST"])
 # def home():
@@ -97,10 +107,13 @@ def home():
         messages.reverse()
     except FileNotFoundError:
         messages = []
+    version = get_version()  # Get the version from config.yaml
 
     return render_template("index.html", result=result, name=name,
                            all_messages="<br>".join(messages),
-                           show_delete_form=show_delete_form)
+                           show_delete_form=show_delete_form,
+                           version=version
+                           )
 
 
 @app.route("/delete_message", methods=["POST"])
