@@ -98,8 +98,55 @@
             textarea.value = textarea.value.replace(/\r?\n/g, "\\n");
         }
     </script>
+
+<script>
+    let lastMessages = "";
+
+    function fetchMessages() {
+        fetch("/get_messages")
+            .then(response => response.text())
+            .then(data => {
+                if (data !== lastMessages) {
+                    document.querySelector(".messages").innerHTML = data;
+
+                    // Play sound only if it's not the initial load
+                    if (lastMessages !== "") {
+                        const sound = document.getElementById("newMessageSound");
+                        sound.play().catch(e => {
+                            console.warn("Sound play failed (maybe due to autoplay restrictions):", e);
+                        });
+                    }
+
+                    lastMessages = data;
+                }
+            });
+    }
+
+    setInterval(fetchMessages, 5000);
+
+    window.onload = function () {
+        fetchMessages();  // Initial load
+        const hasName = "{{ name|default('') }}";
+        if (!hasName) {
+            let username = prompt("Please enter your name:");
+            if (username) {
+                document.getElementById("username").value = username;
+            } else {
+                alert("Name is required.");
+            }
+        }
+    };
+</script>
+
+
+
+
 </head>
 <body>
+
+
+    <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+
     <div class="container">
         <!-- Left section for input form -->
         <div class="left-section">
