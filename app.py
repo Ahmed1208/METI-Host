@@ -1,4 +1,5 @@
 import datetime
+import re
 from flask import Flask, render_template, request, session, redirect
 
 app = Flask(__name__)
@@ -74,7 +75,12 @@ def home():
                 if len(parts) == 5:
                     _, _, _, _, message = parts
                     indent = "\n" + " " * 11
+                    # Convert \n to indent
                     unescaped_msg = message.replace("\\n", indent)
+
+                    # Convert URLs into hyperlinks
+                    url_pattern = re.compile(r"(https?://[^\s]+)")
+                    unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
                     if unescaped_msg.strip():
                         delete_button = ""
                         if show_delete_form:
@@ -141,7 +147,13 @@ def get_messages():
                 if len(parts) == 5:
                     _, _, _, _, message = parts
                     indent = "\n" + " " * 11
+                    # Convert \n to indent
                     unescaped_msg = message.replace("\\n", indent)
+
+                    # Convert URLs into hyperlinks
+                    url_pattern = re.compile(r"(https?://[^\s]+)")
+                    unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
+
                     if unescaped_msg.strip():
                         formatted_msg = (
                             "<div style='white-space: pre-wrap; margin-bottom: 10px;'>"
