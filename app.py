@@ -131,6 +131,31 @@ def delete_message():
     return redirect(request.referrer or "/")
 
 
+@app.route("/get_messages")
+def get_messages():
+    messages = []
+    try:
+        with open("user_inputs.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.rstrip('\n').split('\t', 4)
+                if len(parts) == 5:
+                    _, _, _, _, message = parts
+                    indent = "\n" + " " * 11
+                    unescaped_msg = message.replace("\\n", indent)
+                    if unescaped_msg.strip():
+                        formatted_msg = (
+                            "<div style='white-space: pre-wrap; margin-bottom: 10px;'>"
+                            "<span style='color:blue;'>Anonymous:</span> "
+                            f"{unescaped_msg}</div>"
+                        )
+                        messages.append(formatted_msg)
+        messages.reverse()
+    except FileNotFoundError:
+        messages = []
+
+    return "<br>".join(messages)
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

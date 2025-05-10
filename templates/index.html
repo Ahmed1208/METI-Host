@@ -100,8 +100,65 @@
             textarea.value = textarea.value.replace(/\r?\n/g, "\\n");
         }
     </script>
+
+<script>
+    let lastMessages = "";
+
+    function fetchMessages() {
+        fetch("/get_messages")
+            .then(response => response.text())
+            .then(data => {
+                if (data !== lastMessages) {
+                    document.querySelector(".messages").innerHTML = data;
+
+                    if (lastMessages !== "") {
+                        const sound = document.getElementById("newMessageSound");
+                        sound.play().catch(e => {
+                            console.warn("Sound play failed:", e);
+                        });
+                    }
+
+                    lastMessages = data;
+                }
+            });
+    }
+
+    setInterval(fetchMessages, 5000);
+
+    window.onload = function () {
+        fetchMessages();
+        const hasName = "{{ name|default('') }}";
+        if (!hasName) {
+            let username = prompt("Please enter your name:");
+            if (username) {
+                document.getElementById("username").value = username;
+            } else {
+                alert("Name is required.");
+            }
+        }
+
+        // 👇 Add this block to submit form on Enter (except Shift+Enter)
+        const textarea = document.getElementById("user_input");
+        const form = textarea.closest("form");
+
+        textarea.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();  // submits the form
+            }
+        });
+    };
+</script>
+
+
+
+
 </head>
 <body>
+
+
+    <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+
     <div class="container">
         <!-- Left section for input form -->
         <div class="left-section">
