@@ -52,11 +52,15 @@ def home():
             if name:
                 session["username"] = name
 
-        user_input = request.form["user_input"]
+        user_input = request.form["user_input"].strip()
         ip = get_client_ip()
         user_agent = request.headers.get('User-Agent')
         timestamp = datetime.datetime.now().isoformat()
+        #Check if input is the keyword
+        if user_input == "/demas":
+            user_input = "Here is the Demas Menu: <a href='https://drive.google.com/file/d/1ZjTJNlRQEhO4eAhdAzZxbq2Z0xArc9rj/view?usp=drive_link'>Click Here</a>"
 
+        # Log the input to the file
         with open("user_inputs.txt", "a", encoding="utf-8") as f:
             f.write(f"{timestamp}\t{name}\t{ip}\t{user_agent}\t{user_input}\n")
 
@@ -75,12 +79,12 @@ def home():
                 if len(parts) == 5:
                     _, _, _, _, message = parts
                     indent = "\n" + " " * 11
-                    # Convert \n to indent
                     unescaped_msg = message.replace("\\n", indent)
-
-                    # Convert URLs into hyperlinks
-                    url_pattern = re.compile(r"(https?://[^\s]+)")
-                    unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
+                    #Do not replace the urls to be hyperlinks if the input is the keyword 
+                    if unescaped_msg != "Here is the Demas Menu: <a href='https://drive.google.com/file/d/1ZjTJNlRQEhO4eAhdAzZxbq2Z0xArc9rj/view?usp=drive_link'>Click Here</a>":
+                        # Convert URLs into hyperlinks
+                        url_pattern = re.compile(r"(https?://[^\s]+)")
+                        unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
                     if unescaped_msg.strip():
                         delete_button = ""
                         if show_delete_form:
@@ -149,10 +153,11 @@ def get_messages():
                     indent = "\n" + " " * 11
                     # Convert \n to indent
                     unescaped_msg = message.replace("\\n", indent)
-
-                    # Convert URLs into hyperlinks
-                    url_pattern = re.compile(r"(https?://[^\s]+)")
-                    unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
+                    #Do not replace the urls to be hyperlinks if the input is the keyword 
+                    if unescaped_msg != "Here is the Demas Menu: <a href='https://drive.google.com/file/d/1ZjTJNlRQEhO4eAhdAzZxbq2Z0xArc9rj/view?usp=drive_link'>Click Here</a>":
+                        # Convert URLs into hyperlinks
+                        url_pattern = re.compile(r"(https?://[^\s]+)")
+                        unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
 
                     if unescaped_msg.strip():
                         formatted_msg = (
