@@ -82,31 +82,98 @@
         }
 
         .footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 14px;
-    color: #888;
-    background-color: #f4f7fa;
-    padding: 10px 0;
-    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
-}
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            background-color: #f4f7fa;
+            padding: 10px 0;
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+        }
+            /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Adjust width */
+            max-width: 400px; /* Max width of modal */
+            border-radius: 10px;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 
-    <script>
-        window.onload = function () {
-            const hasName = "{{ name|default('') }}";
-            if (!hasName) {
-                let username = prompt("Please enter your name:");
-                if (username) {
-                    document.getElementById("username").value = username;
-                } else {
-                    alert("Name is required.");
-                }
-            }
-        };
+    <script>        
+        function openModal() {
+            document.getElementById('menusModal').style.display = 'block';
+            loadMenus(); // Fetch and display menus
+        }
+
+        function closeModal() {
+            document.getElementById('menusModal').style.display = 'none';
+        }
+
+        function loadMenus() {
+            fetch('/menus')
+                .then(response => {
+                    if (!response.ok) throw new Error("Network error");
+                    return response.json();
+                })
+                .then(menus => {
+                    const menuList = document.getElementById('menuList');
+                    menuList.innerHTML = ''; // Clear any old entries
+
+                    menus.forEach(menu => {
+                        const li = document.createElement('li');
+                        const p = document.createElement('p');
+                        const a = document.createElement('a');
+
+                        a.href = menu.link;
+                        a.target = "_blank";
+                        a.textContent = menu.name;
+
+                        p.appendChild(a);
+
+                        if (menu.note) {
+                            p.innerHTML += ` [${menu.note}]`;
+                        }
+
+                        li.appendChild(p);
+                        menuList.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error("Failed to load menus:", error);
+                });
+        }
 
         function escapeNewlines() {
             const textarea = document.getElementById("user_input");
@@ -123,14 +190,13 @@
             .then(data => {
                 if (data !== lastMessages) {
                     document.querySelector(".messages").innerHTML = data;
-
+                    
                     if (lastMessages !== "") {
                         const sound = document.getElementById("newMessageSound");
                         sound.play().catch(e => {
                             console.warn("Sound play failed:", e);
                         });
                     }
-
                     lastMessages = data;
                 }
             });
@@ -158,6 +224,36 @@
         const textarea = document.getElementById("user_input");
         const form = textarea.closest("form");
 
+        // Get modal and close button
+        const modal = document.getElementById("menusModal");
+        const closeButton = document.getElementsByClassName("close-btn")[0];
+
+        // Intercept form submission
+        form.onsubmit = function(event) {
+            // Check if the input is exactly '/demas'
+            const userInput = textarea.value.trim().toLowerCase();  // Get and normalize the input
+            if (userInput === "/menus") {
+                // Prevent form submission if /demas
+                event.preventDefault();
+                openModal();    
+                // Clear the input field
+                textarea.value = "";  // Reset the textarea content
+            }
+            escapeNewlines()
+        };
+
+        // Close the modal when the user clicks on the close button
+        closeButton.onclick = function() {
+            modal.style.display = "none";
+        };
+
+        // Close the modal if the user clicks anywhere outside of the modal
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+        
         textarea.addEventListener("keydown", function(event) {
             if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
@@ -165,6 +261,7 @@
             }
         });
     };
+
 </script>
 
 
@@ -175,6 +272,16 @@
 
 
     <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+
+    <!-- Menus Modal -->
+    <div id="menusModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <ul class="menu" id="menuList">
+                <!-- Menu items will be dynamically inserted here -->
+            </ul>
+        </div>
+    </div>
 
     <div class="container">
         <!-- Left section for input form -->
@@ -201,7 +308,6 @@
             </div>
         </div>
     </div>
-
 
 <footer class="footer">
     <p>&copy; 2025 METI Café – All rights reserved.</p>

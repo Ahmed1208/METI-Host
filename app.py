@@ -1,8 +1,12 @@
 import datetime
 import re
-from flask import Flask, render_template, request, session, redirect
+import csv
+from flask import Flask, render_template, request, session, redirect ,jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
 app.secret_key = "your-secret-key"  # Replace with a secure, random key
 
 def tier1(input_text):
@@ -167,6 +171,19 @@ def get_messages():
 
     return "<br>".join(messages)
 
+@app.route('/menus', methods=["GET"])
+def get_menus():
+    menus = []
+    with open('menus.csv', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            menus.append({
+                "id": int(row['id']),
+                "name": row['name'],
+                "link": row['link'],
+                "note": row['note']
+            })
+    return jsonify(menus)
 
 
 if __name__ == "__main__":
