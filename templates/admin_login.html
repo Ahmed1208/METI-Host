@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>METI – Café Admin Access</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #0077cc;
+            margin-bottom: 30px;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #0077cc;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        input[type="submit"] {
+            padding: 15px 30px;
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #005fa3;
+        }
+
+        .back-btn {
+            padding: 15px 30px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #545b62;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            background-color: #f4f7fa;
+            padding: 10px 0;
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>🔒 Admin Access Required</h2>
+
+        <div class="warning">
+            <strong>⚠️ Restricted Area</strong><br>
+            This section is for authorized administrators only.
+        </div>
+
+        <form method="post">
+            <input type="password"
+                   name="admin_password"
+                   placeholder="Enter admin password"
+                   required
+                   autofocus>
+
+            <div class="btn-container">
+                <input type="submit" value="Access Admin Panel">
+                <a href="/" class="back-btn">Back to Café</a>
+            </div>
+        </form>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 METI Café – All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Auto-focus on password field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('input[type="password"]').focus();
+        });
+
+        // Handle Enter key submission
+        document.querySelector('input[type="password"]').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.closest('form').submit();
+            }
+        });
+    </script>
+
+</body>
+</html>
