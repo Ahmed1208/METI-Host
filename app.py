@@ -1,50 +1,45 @@
 import datetime
 import re
+import os
 from flask import Flask, render_template, request, session, redirect
 
 app = Flask(__name__)
-app.secret_key = "your-secret-key"  # Replace with a secure, random key
+
+# Load environment variables
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Configuration from environment variables
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'fallback-secret-key-change-this')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin-delete')
+
 
 def tier1(input_text):
     # Example processing logic — replace with your actual logic
     return f"Processed: {input_text.upper()} ahmed.hossam1"
+
 
 def get_client_ip():
     if request.headers.getlist("X-Forwarded-For"):
         return request.headers.getlist("X-Forwarded-For")[0].split(',')[0].strip()
     return request.remote_addr
 
-# @app.route("/", methods=["GET", "POST"])
-# def home():
-#     result = ""
-#     name = session.get("username")
-#
-#     if request.method == "POST":
-#         # Save username if not already in session
-#         if not name:
-#             name = request.form.get("username")
-#             if name:
-#                 session["username"] = name
-#
-#         user_input = request.form["user_input"]
-#         ip = get_client_ip()
-#         user_agent = request.headers.get('User-Agent')
-#         timestamp = datetime.datetime.now().isoformat()
-#
-#         # Save all data to a file
-#         with open("user_inputs.txt", "a", encoding="utf-8") as f:
-#             f.write(f"{timestamp}\t{name}\t{ip}\t{user_agent}\t{user_input}\n")
-#
-#         result = tier1(user_input)
-#
-#     return render_template("index.html", result=result, name=name)
+
+def format_timestamp(timestamp_str):
+    """Convert ISO timestamp to a more readable format"""
+    try:
+        dt = datetime.datetime.fromisoformat(timestamp_str)
+        return dt.strftime("%B %d, %Y at %I:%M %p")
+    except:
+        return timestamp_str
+
 
 @app.route("/", methods=["GET", "POST"])
-@app.route("/amin-delete", methods=["GET", "POST"])
 def home():
     result = ""
     name = session.get("username")
-    show_delete_form = request.path == "/amin-delete"
+    show_delete_form = False
 
     if request.method == "POST":
         if not name:
@@ -73,7 +68,7 @@ def home():
             for line in f:
                 parts = line.rstrip('\n').split('\t', 4)
                 if len(parts) == 5:
-                    _, _, _, _, message = parts
+                    timestamp, _, _, _, message = parts
                     indent = "\n" + " " * 11
                     # Convert \n to indent
                     unescaped_msg = message.replace("\\n", indent)
@@ -81,7 +76,88 @@ def home():
                     # Convert URLs into hyperlinks
                     url_pattern = re.compile(r"(https?://[^\s]+)")
                     unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
+
                     if unescaped_msg.strip():
+                        formatted_timestamp = format_timestamp(timestamp)
+                        delete_button = ""
+
+                        formatted_msg = (
+                            "<div class='message-container' style='white-space: pre-wrap; margin-bottom: 10px; position: relative;'>"
+                            "<span style='color:blue;'>Anonymous:</span> "
+                            f"{unescaped_msg}{delete_button}"
+                            f"<div class='timestamp-tooltip' style='display: none; position: absolute; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; border-radius: 4px; font-size: 12px; top: -35px; left: 0; white-space: nowrap; z-index: 1000;'>{formatted_timestamp}</div>"
+                            "</div>"
+                        )
+
+                        messages.append(formatted_msg)
+        messages.reverse()
+    except FileNotFoundError:
+        messages = []
+
+    return render_template("index.html", result=result, name=name,
+                           all_messages="<br>".join(messages),
+                           show_delete_form=show_delete_form)
+
+
+@app.route("/amin-delete", methods=["GET", "POST"])
+def admin_delete():
+    # Check if admin is already authenticated
+    if not session.get("admin_authenticated"):
+        if request.method == "POST":
+            password = request.form.get("admin_password", "")
+            if password == ADMIN_PASSWORD:
+                session["admin_authenticated"] = True
+                return redirect("/amin-delete")
+            else:
+                # Wrong password, redirect to home
+                return redirect("/")
+        else:
+            # Show password form
+            return render_template("admin_login.html")
+
+    # Admin is authenticated, show delete interface
+    result = ""
+    name = session.get("username")
+    show_delete_form = True
+
+    if request.method == "POST":
+        if not name:
+            name = request.form.get("username")
+            if name:
+                session["username"] = name
+
+        user_input = request.form["user_input"]
+        ip = get_client_ip()
+        user_agent = request.headers.get('User-Agent')
+        timestamp = datetime.datetime.now().isoformat()
+
+        with open("user_inputs.txt", "a", encoding="utf-8") as f:
+            f.write(f"{timestamp}\t{name}\t{ip}\t{user_agent}\t{user_input}\n")
+
+        session["last_result"] = tier1(user_input)
+
+        return redirect(request.path)
+
+    # Retrieve result after redirect
+    result = session.pop("last_result", "")
+
+    messages = []
+    try:
+        with open("user_inputs.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.rstrip('\n').split('\t', 4)
+                if len(parts) == 5:
+                    timestamp, _, _, _, message = parts
+                    indent = "\n" + " " * 11
+                    # Convert \n to indent
+                    unescaped_msg = message.replace("\\n", indent)
+
+                    # Convert URLs into hyperlinks
+                    url_pattern = re.compile(r"(https?://[^\s]+)")
+                    unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
+
+                    if unescaped_msg.strip():
+                        formatted_timestamp = format_timestamp(timestamp)
                         delete_button = ""
                         if show_delete_form:
                             delete_button = (
@@ -94,9 +170,11 @@ def home():
                             )
 
                         formatted_msg = (
-                            "<div style='white-space: pre-wrap; margin-bottom: 10px;'>"
+                            "<div class='message-container' style='white-space: pre-wrap; margin-bottom: 10px; position: relative;'>"
                             "<span style='color:blue;'>Anonymous:</span> "
-                            f"{unescaped_msg}{delete_button}</div>"
+                            f"{unescaped_msg}{delete_button}"
+                            f"<div class='timestamp-tooltip' style='display: none; position: absolute; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; border-radius: 4px; font-size: 12px; top: -35px; left: 0; white-space: nowrap; z-index: 1000;'>{formatted_timestamp}</div>"
+                            "</div>"
                         )
 
                         messages.append(formatted_msg)
@@ -107,6 +185,12 @@ def home():
     return render_template("index.html", result=result, name=name,
                            all_messages="<br>".join(messages),
                            show_delete_form=show_delete_form)
+
+
+@app.route("/admin-logout")
+def admin_logout():
+    session.pop("admin_authenticated", None)
+    return redirect("/")
 
 
 @app.route("/delete_message", methods=["POST"])
@@ -145,7 +229,7 @@ def get_messages():
             for line in f:
                 parts = line.rstrip('\n').split('\t', 4)
                 if len(parts) == 5:
-                    _, _, _, _, message = parts
+                    timestamp, _, _, _, message = parts
                     indent = "\n" + " " * 11
                     # Convert \n to indent
                     unescaped_msg = message.replace("\\n", indent)
@@ -155,10 +239,13 @@ def get_messages():
                     unescaped_msg = re.sub(url_pattern, r"<a href='\1' target='_blank'>\1</a>", unescaped_msg)
 
                     if unescaped_msg.strip():
+                        formatted_timestamp = format_timestamp(timestamp)
                         formatted_msg = (
-                            "<div style='white-space: pre-wrap; margin-bottom: 10px;'>"
+                            "<div class='message-container' style='white-space: pre-wrap; margin-bottom: 10px; position: relative;'>"
                             "<span style='color:blue;'>Anonymous:</span> "
-                            f"{unescaped_msg}</div>"
+                            f"{unescaped_msg}"
+                            f"<div class='timestamp-tooltip' style='display: none; position: absolute; background: rgba(0,0,0,0.8); color: white; padding: 5px 8px; border-radius: 4px; font-size: 12px; top: -35px; left: 0; white-space: nowrap; z-index: 1000;'>{formatted_timestamp}</div>"
+                            "</div>"
                         )
                         messages.append(formatted_msg)
         messages.reverse()
@@ -166,7 +253,6 @@ def get_messages():
         messages = []
 
     return "<br>".join(messages)
-
 
 
 if __name__ == "__main__":
