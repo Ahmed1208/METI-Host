@@ -12,6 +12,7 @@ myenv/
 env/
 .venv/
 ENV/
+.env
 
 # PyCharm project settings
 .idea/
@@ -64,7 +65,6 @@ coverage.xml
 
 # dotenv
 .env
-.env.*
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/

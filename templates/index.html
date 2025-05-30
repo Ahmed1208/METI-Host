@@ -81,6 +81,37 @@
             font-weight: bold;
         }
 
+        /* Message container hover effects */
+        .message-container {
+            transition: background-color 0.2s ease;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .message-container:hover {
+            background-color: rgba(0, 119, 204, 0.05);
+        }
+
+        /* Timestamp tooltip styles */
+        .timestamp-tooltip {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .message-container:hover .timestamp-tooltip {
+            opacity: 1;
+            display: block !important;
+        }
+
+        /* Smart positioning for first message tooltip */
+        .message-container:first-child .timestamp-tooltip {
+            top: 100% !important;
+            margin-top: 5px;
+        }
+
         .footer {
             position: fixed;
             bottom: 0;
@@ -130,6 +161,51 @@
             cursor: pointer;
         }
     </style>
+</head>
+<body>
+
+    <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+
+    <div class="container">
+        <!-- Left section for input form -->
+        <div class="left-section">
+            {% if show_delete_form %}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0; color: #dc3545;">🗑️ Admin Delete Mode</h2>
+                    <a href="/admin-logout" style="background-color: #6c757d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">Logout</a>
+                </div>
+                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 14px;">
+                    <strong>⚠️ Warning:</strong> You can delete messages by clicking the 🗑️ button next to each message.
+                </div>
+            {% else %}
+                <h2>meticafé منتدى</h2>
+            {% endif %}
+
+            <h3>What is on your mind ?!</h3>
+
+            <form method="post" onsubmit="escapeNewlines()">
+                {% if not name %}
+                    <input type="hidden" id="username" name="username" required>
+                {% endif %}
+
+                <textarea id="user_input" name="user_input" rows="5" required></textarea><br>
+                <input type="submit" value="Submit">
+            </form>
+
+        </div>
+
+        <!-- Right section for displaying previous messages -->
+        <div class="right-section">
+            <h3>All Previous Messages:</h3>
+            <div class="messages">
+                {{ all_messages|safe }}
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 METI Café – All rights reserved.</p>
+    </footer>
 
     <script>        
         function openModal() {
@@ -179,47 +255,46 @@
             const textarea = document.getElementById("user_input");
             textarea.value = textarea.value.replace(/\r?\n/g, "\\n");
         }
-    </script>
 
-<script>
-    let lastMessages = "";
+        let lastMessages = "";
 
-    function fetchMessages() {
-        fetch("/get_messages")
-            .then(response => response.text())
-            .then(data => {
-                if (data !== lastMessages) {
-                    document.querySelector(".messages").innerHTML = data;
-                    
-                    if (lastMessages !== "") {
-                        const sound = document.getElementById("newMessageSound");
-                        sound.play().catch(e => {
-                            console.warn("Sound play failed:", e);
-                        });
+        function fetchMessages() {
+            fetch("/get_messages")
+                .then(response => response.text())
+                .then(data => {
+                    if (data !== lastMessages) {
+                        document.querySelector(".messages").innerHTML = data;
+
+                        if (lastMessages !== "") {
+                            const sound = document.getElementById("newMessageSound");
+                            sound.play().catch(e => {
+                                console.warn("Sound play failed:", e);
+                            });
+                        }
+
+                        lastMessages = data;
                     }
-                    lastMessages = data;
-                }
-            });
-    }
-
-    window.onload = function () {
-        const currentPath = window.location.pathname;
-
-        // Enable live update only if NOT on /amin-delete
-        if (currentPath !== "/amin-delete") {
-            fetchMessages();
-            setInterval(fetchMessages, 5000);
+                });
         }
 
-        const hasName = "{{ name|default('') }}";
-        if (!hasName) {
-            let username = prompt("Please enter your name:");
-            if (username) {
-                document.getElementById("username").value = username;
-            } else {
-                alert("Name is required.");
+        window.onload = function () {
+            const currentPath = window.location.pathname;
+
+            // Enable live update only if NOT on /amin-delete
+            if (currentPath !== "/amin-delete") {
+                fetchMessages();
+                setInterval(fetchMessages, 5000);
             }
-        }
+
+            const hasName = "{{ name|default('') }}";
+            if (!hasName) {
+                let username = prompt("Please enter your name:");
+                if (username) {
+                    document.getElementById("username").value = username;
+                } else {
+                    alert("Name is required.");
+                }
+            }
 
         const textarea = document.getElementById("user_input");
         const form = textarea.closest("form");
@@ -315,6 +390,3 @@
 
 </body>
 </html>
-
-
-
