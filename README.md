@@ -10,6 +10,7 @@ A simple Flask-based anonymous messaging application with admin moderation featu
 - 📱 Responsive design
 - 🔗 Automatic URL detection and linking
 - 🔔 Sound notifications for new messages
+- 🍽️ Restaurant menus on demand – type /menus in the chat to view a list of nearby restaurants and their menus
 
 ## Setup Instructions
 
