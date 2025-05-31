@@ -133,7 +133,7 @@
     </div>
 
     <footer class="footer">
-        <p>&copy; 2025 METI Café – All rights reserved.</p>
+        <p>&copy; 2025 METI Café – All rights reserved. <span id="current-version"></span></p>
     </footer>
 
     <script>
@@ -149,6 +149,28 @@
                 this.closest('form').submit();
             }
         });
+
+
+        window.onload = function () {
+            loadVersion();
+        }
+
+        function loadVersion() {
+        fetch('/version', {method: 'POST',})
+            .then(response => {
+                if (!response.ok) throw new Error("Network error");
+                return response.json();
+            })
+            .then(version => {
+                const Version = document.getElementById('current-version');
+                Version.textContent = version;
+            })
+            .catch(error => {
+                console.error("Failed to load menus:", error);
+            });
+    }
+
+
     </script>
 
 </body>
