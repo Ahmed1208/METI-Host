@@ -124,7 +124,7 @@
             padding: 10px 0;
             box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
         }
-            /* Modal Styles */
+      /* Modal Styles */
         .modal {
             display: none; /* Hidden by default */
             position: fixed;
@@ -160,11 +160,21 @@
             text-decoration: none;
             cursor: pointer;
         }
+
     </style>
 </head>
 <body>
 
     <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+        <!-- Menus Modal -->
+    <div id="menusModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <ul class="menu" id="menuList">
+                <!-- Menu items will be dynamically inserted here -->
+            </ul>
+        </div>
+    </div>
 
     <div class="container">
         <!-- Left section for input form -->
@@ -207,8 +217,9 @@
         <p>&copy; 2025 METI Café – All rights reserved.</p>
     </footer>
 
-    <script>        
-        function openModal() {
+    <script>
+
+         function openModal() {
             document.getElementById('menusModal').style.display = 'block';
             loadMenus(); // Fetch and display menus
         }
@@ -296,12 +307,11 @@
                 }
             }
 
+             const modal = document.getElementById("menusModal");
+        const closeButton = document.getElementsByClassName("close-btn")[0];
+
         const textarea = document.getElementById("user_input");
         const form = textarea.closest("form");
-
-        // Get modal and close button
-        const modal = document.getElementById("menusModal");
-        const closeButton = document.getElementsByClassName("close-btn")[0];
 
         // Intercept form submission
         form.onsubmit = function(event) {
@@ -309,8 +319,8 @@
             const userInput = textarea.value.trim().toLowerCase();  // Get and normalize the input
             if (userInput === "/menus") {
                 // Prevent form submission if /demas
-                event.preventDefault();
-                openModal();    
+                event.preventDefault(); // To Stop the Enter from being written in the form
+                openModal();
                 // Clear the input field
                 textarea.value = "";  // Reset the textarea content
             }
@@ -328,65 +338,46 @@
                 modal.style.display = "none";
             }
         };
-        
-        textarea.addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                form.requestSubmit();
-            }
-        });
-    };
-
-</script>
 
 
 
+            textarea.addEventListener("keydown", function(event) {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    form.requestSubmit();
+                }
+            });
 
-</head>
-<body>
+            // Add smart tooltip positioning
+            setupTooltipPositioning();
+        };
 
+        function setupTooltipPositioning() {
+            const messagesContainer = document.querySelector('.messages');
 
-    <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+            // Use event delegation to handle dynamically added messages
+            messagesContainer.addEventListener('mouseenter', function(e) {
+                if (e.target.classList.contains('message-container')) {
+                    const tooltip = e.target.querySelector('.timestamp-tooltip');
+                    if (tooltip) {
+                        const containerRect = messagesContainer.getBoundingClientRect();
+                        const messageRect = e.target.getBoundingClientRect();
 
-    <!-- Menus Modal -->
-    <div id="menusModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <ul class="menu" id="menuList">
-                <!-- Menu items will be dynamically inserted here -->
-            </ul>
-        </div>
-    </div>
-
-    <div class="container">
-        <!-- Left section for input form -->
-        <div class="left-section">
-            <h2>meticafé منتدى</h2>
-            <h3>What is on your mind ?!</h3>
-
-            <form method="post" onsubmit="escapeNewlines()">
-                {% if not name %}
-                    <input type="hidden" id="username" name="username" required>
-                {% endif %}
-
-                <textarea id="user_input" name="user_input" rows="5" required></textarea><br>
-                <input type="submit" value="Submit">
-            </form>
-
-        </div>
-
-        <!-- Right section for displaying previous messages -->
-        <div class="right-section">
-            <h3>All Previous Messages:</h3>
-            <div class="messages">
-                {{ all_messages|safe }}
-            </div>
-        </div>
-    </div>
-
-<footer class="footer">
-    <p>&copy; 2025 METI Café – All rights reserved.</p>
-</footer>
+                        // Check if tooltip would be cut off at the top
+                        if (messageRect.top - containerRect.top < 40) {
+                            // Position below the message instead
+                            tooltip.style.top = '100%';
+                            tooltip.style.marginTop = '5px';
+                        } else {
+                            // Default position above
+                            tooltip.style.top = '-35px';
+                            tooltip.style.marginTop = '0';
+                        }
+                    }
+                }
+            }, true);
+        }
+    </script>
 
 </body>
 </html>
