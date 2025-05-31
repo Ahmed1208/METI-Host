@@ -15,7 +15,7 @@
         }
 
         .container {
-            display: flex;  /* Flexbox container */
+            display: flex; /* Flexbox container */
             justify-content: space-between;
             background-color: white;
             border-radius: 12px;
@@ -73,7 +73,7 @@
             background-color: #f9f9f9;
             border-radius: 8px;
             font-family: monospace;
-            font-size: 15px;  /* Increase the font size of the text */
+            font-size: 15px; /* Increase the font size of the text */
         }
 
         .anon-label {
@@ -98,7 +98,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .message-container:hover .timestamp-tooltip {
@@ -124,7 +124,8 @@
             padding: 10px 0;
             box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
         }
-      /* Modal Styles */
+
+        /* Modal Styles */
         .modal {
             display: none; /* Hidden by default */
             position: fixed;
@@ -165,156 +166,173 @@
 </head>
 <body>
 
-    <audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
-        <!-- Menus Modal -->
-    <div id="menusModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <ul class="menu" id="menuList">
-                <!-- Menu items will be dynamically inserted here -->
-            </ul>
-        </div>
+<audio id="newMessageSound" src="/static/notification.mp3" preload="auto"></audio>
+<!-- Menus Modal -->
+<div id="menusModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <ul class="menu" id="menuList">
+            <!-- Menu items will be dynamically inserted here -->
+        </ul>
     </div>
+</div>
 
-    <div class="container">
-        <!-- Left section for input form -->
-        <div class="left-section">
-            {% if show_delete_form %}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #dc3545;">🗑️ Admin Delete Mode</h2>
-                    <a href="/admin-logout" style="background-color: #6c757d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">Logout</a>
-                </div>
-                <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 14px;">
-                    <strong>⚠️ Warning:</strong> You can delete messages by clicking the 🗑️ button next to each message.
-                </div>
-            {% else %}
-                <h2>meticafé منتدى</h2>
+<div class="container">
+    <!-- Left section for input form -->
+    <div class="left-section">
+        {% if show_delete_form %}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #dc3545;">🗑️ Admin Delete Mode</h2>
+            <a href="/admin-logout"
+               style="background-color: #6c757d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">Logout</a>
+        </div>
+        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 14px;">
+            <strong>⚠️ Warning:</strong> You can delete messages by clicking the 🗑️ button next to each message.
+        </div>
+        {% else %}
+        <h2>meticafé منتدى</h2>
+        {% endif %}
+
+        <h3>What is on your mind ?!</h3>
+
+        <form method="post" onsubmit="escapeNewlines()">
+            {% if not name %}
+            <input type="hidden" id="username" name="username" required>
             {% endif %}
 
-            <h3>What is on your mind ?!</h3>
+            <textarea id="user_input" name="user_input" rows="5" required></textarea><br>
+            <input type="submit" value="Submit">
+        </form>
 
-            <form method="post" onsubmit="escapeNewlines()">
-                {% if not name %}
-                    <input type="hidden" id="username" name="username" required>
-                {% endif %}
-
-                <textarea id="user_input" name="user_input" rows="5" required></textarea><br>
-                <input type="submit" value="Submit">
-            </form>
-
-        </div>
-
-        <!-- Right section for displaying previous messages -->
-        <div class="right-section">
-            <h3>All Previous Messages:</h3>
-            <div class="messages">
-                {{ all_messages|safe }}
-            </div>
-        </div>
     </div>
 
-    <footer class="footer">
-        <p>&copy; 2025 METI Café – All rights reserved.</p>
-    </footer>
+    <!-- Right section for displaying previous messages -->
+    <div class="right-section">
+        <h3>All Previous Messages:</h3>
+        <div class="messages">
+            {{ all_messages|safe }}
+        </div>
+    </div>
+</div>
 
-    <script>
+<footer class="footer">
+    <p>&copy; 2025 METI Café – All rights reserved. <span id="current-version"></span></p>
+</footer>
 
-         function openModal() {
-            document.getElementById('menusModal').style.display = 'block';
-            loadMenus(); // Fetch and display menus
-        }
+<script>
 
-        function closeModal() {
-            document.getElementById('menusModal').style.display = 'none';
-        }
+    function openModal() {
+        document.getElementById('menusModal').style.display = 'block';
+        loadMenus(); // Fetch and display menus
+    }
 
-        function loadMenus() {
-            fetch('/menus')
-                .then(response => {
-                    if (!response.ok) throw new Error("Network error");
-                    return response.json();
-                })
-                .then(menus => {
-                    const menuList = document.getElementById('menuList');
-                    menuList.innerHTML = ''; // Clear any old entries
+    function closeModal() {
+        document.getElementById('menusModal').style.display = 'none';
+    }
 
-                    menus.forEach(menu => {
-                        const li = document.createElement('li');
-                        const p = document.createElement('p');
-                        const a = document.createElement('a');
+    function loadVersion() {
+        fetch('/version', {method: 'POST',})
+            .then(response => {
+                if (!response.ok) throw new Error("Network error");
+                return response.json();
+            })
+            .then(version => {
+                const Version = document.getElementById('current-version');
+                Version.textContent = version;
+            })
+            .catch(error => {
+                console.error("Failed to load menus:", error);
+            });
+    }
 
-                        a.href = menu.link;
-                        a.target = "_blank";
-                        a.textContent = menu.name;
+    function loadMenus() {
+        fetch('/menus', {method: 'POST',})
+            .then(response => {
+                if (!response.ok) throw new Error("Network error");
+                return response.json();
+            })
+            .then(menus => {
+                const menuList = document.getElementById('menuList');
+                menuList.innerHTML = ''; // Clear any old entries
 
-                        p.appendChild(a);
+                menus.forEach(menu => {
+                    const li = document.createElement('li');
+                    const p = document.createElement('p');
+                    const a = document.createElement('a');
 
-                        if (menu.note) {
-                            p.innerHTML += ` [${menu.note}]`;
-                        }
+                    a.href = menu.link;
+                    a.target = "_blank";
+                    a.textContent = menu.name;
 
-                        li.appendChild(p);
-                        menuList.appendChild(li);
-                    });
-                })
-                .catch(error => {
-                    console.error("Failed to load menus:", error);
-                });
-        }
+                    p.appendChild(a);
 
-        function escapeNewlines() {
-            const textarea = document.getElementById("user_input");
-            textarea.value = textarea.value.replace(/\r?\n/g, "\\n");
-        }
-
-        let lastMessages = "";
-
-        function fetchMessages() {
-            fetch("/get_messages")
-                .then(response => response.text())
-                .then(data => {
-                    if (data !== lastMessages) {
-                        document.querySelector(".messages").innerHTML = data;
-
-                        if (lastMessages !== "") {
-                            const sound = document.getElementById("newMessageSound");
-                            sound.play().catch(e => {
-                                console.warn("Sound play failed:", e);
-                            });
-                        }
-
-                        lastMessages = data;
+                    if (menu.note) {
+                        p.innerHTML += ` [${menu.note}]`;
                     }
+
+                    li.appendChild(p);
+                    menuList.appendChild(li);
                 });
+            })
+            .catch(error => {
+                console.error("Failed to load menus:", error);
+            });
+    }
+
+    function escapeNewlines() {
+        const textarea = document.getElementById("user_input");
+        textarea.value = textarea.value.replace(/\r?\n/g, "\\n");
+    }
+
+    let lastMessages = "";
+
+    function fetchMessages() {
+        fetch("/get_messages")
+            .then(response => response.text())
+            .then(data => {
+                if (data !== lastMessages) {
+                    document.querySelector(".messages").innerHTML = data;
+
+                    if (lastMessages !== "") {
+                        const sound = document.getElementById("newMessageSound");
+                        sound.play().catch(e => {
+                            console.warn("Sound play failed:", e);
+                        });
+                    }
+
+                    lastMessages = data;
+                }
+            });
+    }
+
+    window.onload = function () {
+        loadVersion();
+        const currentPath = window.location.pathname;
+
+        // Enable live update only if NOT on /amin-delete
+        if (currentPath !== "/amin-delete") {
+            fetchMessages();
+            setInterval(fetchMessages, 5000);
         }
 
-        window.onload = function () {
-            const currentPath = window.location.pathname;
-
-            // Enable live update only if NOT on /amin-delete
-            if (currentPath !== "/amin-delete") {
-                fetchMessages();
-                setInterval(fetchMessages, 5000);
+        const hasName = "{{ name|default('') }}";
+        if (!hasName) {
+            let username = prompt("Please enter your name:");
+            if (username) {
+                document.getElementById("username").value = username;
+            } else {
+                alert("Name is required.");
             }
+        }
 
-            const hasName = "{{ name|default('') }}";
-            if (!hasName) {
-                let username = prompt("Please enter your name:");
-                if (username) {
-                    document.getElementById("username").value = username;
-                } else {
-                    alert("Name is required.");
-                }
-            }
-
-             const modal = document.getElementById("menusModal");
+        const modal = document.getElementById("menusModal");
         const closeButton = document.getElementsByClassName("close-btn")[0];
 
         const textarea = document.getElementById("user_input");
         const form = textarea.closest("form");
 
         // Intercept form submission
-        form.onsubmit = function(event) {
+        form.onsubmit = function (event) {
             // Check if the input is exactly '/demas'
             const userInput = textarea.value.trim().toLowerCase();  // Get and normalize the input
             if (userInput === "/menus") {
@@ -328,56 +346,55 @@
         };
 
         // Close the modal when the user clicks on the close button
-        closeButton.onclick = function() {
+        closeButton.onclick = function () {
             modal.style.display = "none";
         };
 
         // Close the modal if the user clicks anywhere outside of the modal
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (event.target === modal) {
                 modal.style.display = "none";
             }
         };
 
 
+        textarea.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
 
-            textarea.addEventListener("keydown", function(event) {
-                if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    form.requestSubmit();
-                }
-            });
+        // Add smart tooltip positioning
+        setupTooltipPositioning();
+    };
 
-            // Add smart tooltip positioning
-            setupTooltipPositioning();
-        };
+    function setupTooltipPositioning() {
+        const messagesContainer = document.querySelector('.messages');
 
-        function setupTooltipPositioning() {
-            const messagesContainer = document.querySelector('.messages');
+        // Use event delegation to handle dynamically added messages
+        messagesContainer.addEventListener('mouseenter', function (e) {
+            if (e.target.classList.contains('message-container')) {
+                const tooltip = e.target.querySelector('.timestamp-tooltip');
+                if (tooltip) {
+                    const containerRect = messagesContainer.getBoundingClientRect();
+                    const messageRect = e.target.getBoundingClientRect();
 
-            // Use event delegation to handle dynamically added messages
-            messagesContainer.addEventListener('mouseenter', function(e) {
-                if (e.target.classList.contains('message-container')) {
-                    const tooltip = e.target.querySelector('.timestamp-tooltip');
-                    if (tooltip) {
-                        const containerRect = messagesContainer.getBoundingClientRect();
-                        const messageRect = e.target.getBoundingClientRect();
-
-                        // Check if tooltip would be cut off at the top
-                        if (messageRect.top - containerRect.top < 40) {
-                            // Position below the message instead
-                            tooltip.style.top = '100%';
-                            tooltip.style.marginTop = '5px';
-                        } else {
-                            // Default position above
-                            tooltip.style.top = '-35px';
-                            tooltip.style.marginTop = '0';
-                        }
+                    // Check if tooltip would be cut off at the top
+                    if (messageRect.top - containerRect.top < 40) {
+                        // Position below the message instead
+                        tooltip.style.top = '100%';
+                        tooltip.style.marginTop = '5px';
+                    } else {
+                        // Default position above
+                        tooltip.style.top = '-35px';
+                        tooltip.style.marginTop = '0';
                     }
                 }
-            }, true);
-        }
-    </script>
+            }
+        }, true);
+    }
+</script>
 
 </body>
 </html>

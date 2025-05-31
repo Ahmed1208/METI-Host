@@ -2,8 +2,10 @@ import datetime
 import re
 import os
 import csv
-from flask import Flask, render_template, request, session, redirect ,jsonify
+from flask import Flask, render_template, request, session, redirect, jsonify
 from flask_cors import CORS
+import yaml
+
 app = Flask(__name__)
 CORS(app)
 # Load environment variables
@@ -194,6 +196,16 @@ def admin_logout():
     return redirect("/")
 
 
+@app.route("/version", methods=["POST"])
+def get_version():  # This method Read the Current Config and return the Value of the Version.
+    try:
+        with open("config.yaml", "r") as f:
+            config = yaml.safe_load(f)
+            return jsonify(config.get("version", "0.0.0"))
+    except FileNotFoundError:
+        return jsonify("0.0.0")  # Return a default version if the file doesn't exist
+
+
 @app.route("/delete_message", methods=["POST"])
 def delete_message():
     message_to_delete = request.form.get("message_text", "").strip()
@@ -255,7 +267,8 @@ def get_messages():
 
     return "<br>".join(messages)
 
-@app.route('/menus', methods=["GET"])
+
+@app.route('/menus', methods=["POST"])
 def get_menus():
     menus = []
     with open('menus.csv', newline='', encoding='utf-8') as csvfile:
@@ -268,6 +281,7 @@ def get_menus():
                 "note": row['note']
             })
     return jsonify(menus)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
