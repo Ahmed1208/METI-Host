@@ -1,14 +1,11 @@
 import datetime
 import re
-import csv
 import os
+import csv
 from flask import Flask, render_template, request, session, redirect ,jsonify
 from flask_cors import CORS
-
 app = Flask(__name__)
-CORS(app) # This line is used to allow other software / Frontend to call the Apis 
-
-
+CORS(app)
 # Load environment variables
 from dotenv import load_dotenv
 
