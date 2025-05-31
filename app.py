@@ -1,10 +1,11 @@
 import datetime
 import re
 import os
-from flask import Flask, render_template, request, session, redirect
-
+import csv
+from flask import Flask, render_template, request, session, redirect ,jsonify
+from flask_cors import CORS
 app = Flask(__name__)
-
+CORS(app)
 # Load environment variables
 from dotenv import load_dotenv
 
@@ -254,6 +255,19 @@ def get_messages():
 
     return "<br>".join(messages)
 
+@app.route('/menus', methods=["GET"])
+def get_menus():
+    menus = []
+    with open('menus.csv', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            menus.append({
+                "id": int(row['id']),
+                "name": row['name'],
+                "link": row['link'],
+                "note": row['note']
+            })
+    return jsonify(menus)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
