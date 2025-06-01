@@ -5,6 +5,8 @@ import csv
 from flask import Flask, render_template, request, session, redirect, jsonify
 from flask_cors import CORS
 import yaml
+from version import get_version_from_github
+
 
 app = Flask(__name__)
 CORS(app)
@@ -281,6 +283,22 @@ def get_menus():
                 "note": row['note']
             })
     return jsonify(menus)
+
+
+# Add this function to make version available in templates
+@app.context_processor
+def inject_version():
+    try:
+        return {'app_version': get_version_from_github()}
+    except Exception as e:
+        print(f"Version error: {e}")
+        return {'app_version': 'v1.0.0'}
+
+# Optional: Add a simple test route to check version
+@app.route('/test-version')
+def test_version():
+    return f"Version: {get_version_from_github()}"
+
 
 
 if __name__ == "__main__":
